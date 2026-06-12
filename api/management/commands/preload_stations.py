@@ -1,9 +1,9 @@
-"""
+﻿"""
 Django management command to preload fuel stations data.
 Usage: python manage.py preload_stations
 """
 import logging
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 from django.conf import settings
 from api.services.stations import stations_service
 
@@ -33,7 +33,6 @@ class Command(BaseCommand):
         self.stdout.write("FUEL STATIONS PRELOAD COMMAND")
         self.stdout.write("=" * 60)
         
-        # Check if already loaded
         if stations_service.is_loaded() and not force:
             self.stdout.write(self.style.WARNING(
                 f"Stations already loaded ({stations_service.get_count()} stations)"
@@ -41,7 +40,6 @@ class Command(BaseCommand):
             self.stdout.write("Use --force to reload")
             return
         
-        # Load stations
         self.stdout.write("Loading fuel stations from CSV...")
         
         if csv_path:
@@ -49,15 +47,14 @@ class Command(BaseCommand):
             success = stations_service.load_stations(csv_path)
         else:
             csv_path = getattr(settings, 'FUEL_STATIONS_CSV', 'data/fuel_prices_with_coords.csv')
-            self.stdout.write(f"Using CSV path from settings: {csv_path}")
+            self.stdout.write(f"Using CSV path: {csv_path}")
             success = stations_service.load_stations()
         
         if success:
             self.stdout.write(self.style.SUCCESS(
-                f"✓ Successfully loaded {stations_service.get_count()} fuel stations"
+                f"Successfully loaded {stations_service.get_count()} fuel stations"
             ))
             
-            # Show sample of first few stations
             stations = stations_service.get_all_stations()
             if stations:
                 self.stdout.write("\nSample stations:")
@@ -68,9 +65,6 @@ class Command(BaseCommand):
                     )
         else:
             error = stations_service.get_load_error()
-            self.stdout.write(self.style.ERROR(f"✗ Failed to load stations: {error}"))
-            raise CommandError(f"Failed to load stations: {error}")
+            self.stdout.write(self.style.ERROR(f"Failed to load stations: {error}"))
         
-        self.stdout.write("=" * 60)
-        self.stdout.write("PRELOAD COMPLETE")
         self.stdout.write("=" * 60)

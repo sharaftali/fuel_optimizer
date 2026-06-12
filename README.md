@@ -30,3 +30,9 @@ python manage.py migrate
 
 # Start server
 python manage.py runserver
+
+# Run the geocoding script (this will take ~30-40 minutes)
+python scripts/geocode_initial.py
+
+# Or for testing with limit
+python scripts/geocode_initial.py --limit 100

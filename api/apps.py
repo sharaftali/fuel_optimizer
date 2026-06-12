@@ -1,4 +1,7 @@
 from django.apps import AppConfig
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class ApiConfig(AppConfig):
@@ -7,14 +10,18 @@ class ApiConfig(AppConfig):
     verbose_name = 'Fuel Optimizer API'
     
     def ready(self):
-        """Preload stations data when Django starts."""
-        import logging
-        logger = logging.getLogger(__name__)
-        
+        """
+        Preload stations data when Django starts.
+        This runs once at application startup.
+        """
         try:
             from api.services.stations import stations_service
-            # Trigger station loading
-            _ = stations_service.get_all_stations()
-            logger.info("Stations data preloaded successfully")
+            
+            # Try to load stations
+            if stations_service.load_stations():
+                logger.info(f"Preloaded {stations_service.get_count()} fuel stations on startup")
+            else:
+                logger.warning(f"Failed to preload stations: {stations_service.get_load_error()}")
+                
         except Exception as e:
-            logger.warning(f"Could not preload stations: {e}")
+            logger.error(f"Error preloading stations: {e}")

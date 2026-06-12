@@ -1,6 +1,3 @@
-from django.shortcuts import render
-
-# Create your views here.
 """
 API views for route and fuel optimization.
 """
@@ -16,9 +13,6 @@ from .services.optimizer import FuelOptimizer
 from .serializers import (
     RouteRequestSerializer,
     FuelOptimizeRequestSerializer,
-    RouteResponseSerializer,
-    FuelOptimizeResponseSerializer,
-    ErrorResponseSerializer
 )
 
 logger = logging.getLogger(__name__)
@@ -54,7 +48,7 @@ class RouteOptimizeView(APIView):
         serializer = RouteRequestSerializer(data=request.query_params)
         if not serializer.is_valid():
             return Response(
-                {'status': 'error', 'error': 'Invalid parameters', 'details': serializer.errors},
+                {'error': 'Invalid parameters', 'details': serializer.errors},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
@@ -66,11 +60,7 @@ class RouteOptimizeView(APIView):
             start_lat, start_lng, start_addr = self.geocoder.geocode(start)
             if not start_lat:
                 return Response(
-                    {
-                        'status': 'error',
-                        'error': f'Could not find location: "{start}"',
-                        'code': 'START_LOCATION_NOT_FOUND'
-                    },
+                    {'error': f'Could not find location: "{start}"'},
                     status=status.HTTP_404_NOT_FOUND
                 )
             
@@ -78,11 +68,7 @@ class RouteOptimizeView(APIView):
             finish_lat, finish_lng, finish_addr = self.geocoder.geocode(finish)
             if not finish_lat:
                 return Response(
-                    {
-                        'status': 'error',
-                        'error': f'Could not find location: "{finish}"',
-                        'code': 'FINISH_LOCATION_NOT_FOUND'
-                    },
+                    {'error': f'Could not find location: "{finish}"'},
                     status=status.HTTP_404_NOT_FOUND
                 )
             
@@ -90,11 +76,7 @@ class RouteOptimizeView(APIView):
             route = self.router.get_route(start_lat, start_lng, finish_lat, finish_lng)
             if not route:
                 return Response(
-                    {
-                        'status': 'error',
-                        'error': 'Could not calculate route between these locations',
-                        'code': 'ROUTE_NOT_FOUND'
-                    },
+                    {'error': 'Could not calculate route between these locations'},
                     status=status.HTTP_404_NOT_FOUND
                 )
             
@@ -118,7 +100,7 @@ class RouteOptimizeView(APIView):
         except Exception as e:
             logger.exception(f"Unexpected error processing route request: {e}")
             return Response(
-                {'status': 'error', 'error': 'Internal server error', 'code': 'INTERNAL_ERROR'},
+                {'error': 'Internal server error'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
@@ -142,7 +124,7 @@ class FuelOptimizeView(APIView):
         serializer = FuelOptimizeRequestSerializer(data=request.query_params)
         if not serializer.is_valid():
             return Response(
-                {'status': 'error', 'error': 'Invalid parameters', 'details': serializer.errors},
+                {'error': 'Invalid parameters', 'details': serializer.errors},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
@@ -155,11 +137,7 @@ class FuelOptimizeView(APIView):
             start_lat, start_lng, start_addr = self.geocoder.geocode(start)
             if not start_lat:
                 return Response(
-                    {
-                        'status': 'error',
-                        'error': f'Could not find location: "{start}"',
-                        'code': 'START_LOCATION_NOT_FOUND'
-                    },
+                    {'error': f'Could not find location: "{start}"'},
                     status=status.HTTP_404_NOT_FOUND
                 )
             
@@ -167,11 +145,7 @@ class FuelOptimizeView(APIView):
             finish_lat, finish_lng, finish_addr = self.geocoder.geocode(finish)
             if not finish_lat:
                 return Response(
-                    {
-                        'status': 'error',
-                        'error': f'Could not find location: "{finish}"',
-                        'code': 'FINISH_LOCATION_NOT_FOUND'
-                    },
+                    {'error': f'Could not find location: "{finish}"'},
                     status=status.HTTP_404_NOT_FOUND
                 )
             
@@ -179,11 +153,7 @@ class FuelOptimizeView(APIView):
             route = self.router.get_route(start_lat, start_lng, finish_lat, finish_lng)
             if not route:
                 return Response(
-                    {
-                        'status': 'error',
-                        'error': 'Could not calculate route between these locations',
-                        'code': 'ROUTE_NOT_FOUND'
-                    },
+                    {'error': 'Could not calculate route between these locations'},
                     status=status.HTTP_404_NOT_FOUND
                 )
             
@@ -196,11 +166,7 @@ class FuelOptimizeView(APIView):
             
             if not stations:
                 return Response(
-                    {
-                        'status': 'error',
-                        'error': 'No fuel stations found near this route',
-                        'code': 'NO_STATIONS_FOUND'
-                    },
+                    {'error': 'No fuel stations found near this route'},
                     status=status.HTTP_404_NOT_FOUND
                 )
             
@@ -210,19 +176,14 @@ class FuelOptimizeView(APIView):
                 stations=stations
             )
             
-            if not fuel_plan['journey_completable']:
+            if not fuel_plan.get('journey_completable', False):
                 return Response(
-                    {
-                        'status': 'error',
-                        'error': 'Cannot complete journey with available fuel stations',
-                        'code': 'JOURNEY_NOT_COMPLETABLE'
-                    },
+                    {'error': 'Cannot complete journey with available fuel stations'},
                     status=status.HTTP_404_NOT_FOUND
                 )
             
-            # Build response
+            # Build final response
             response_data = {
-                'status': 'success',
                 'route': {
                     'start_location': {
                         'address': start_addr,
@@ -233,15 +194,11 @@ class FuelOptimizeView(APIView):
                         'coordinates': [finish_lng, finish_lat]
                     },
                     'total_distance_miles': route['distance_miles'],
-                    'polyline': route['polyline'],
-                    'cached': route.get('cached', False)
+                    'polyline': route['polyline']
                 },
-                'fuel_plan': fuel_plan,
-                'summary': {
-                    'average_price_per_gallon': round(fuel_plan['total_cost'] / fuel_plan['total_gallons'], 2) if fuel_plan['total_gallons'] > 0 else 0,
-                    'cost_per_mile': round(fuel_plan['total_cost'] / route['distance_miles'], 2) if route['distance_miles'] > 0 else 0,
-                    'number_of_stops': len(fuel_plan['stops'])
-                }
+                'fuel_stops': fuel_plan.get('stops', []),
+                'total_gallons': fuel_plan.get('total_gallons', 0),
+                'total_fuel_cost': fuel_plan.get('total_cost', 0)
             }
             
             return Response(response_data, status=status.HTTP_200_OK)
@@ -249,6 +206,6 @@ class FuelOptimizeView(APIView):
         except Exception as e:
             logger.exception(f"Unexpected error processing fuel optimization request: {e}")
             return Response(
-                {'status': 'error', 'error': 'Internal server error', 'code': 'INTERNAL_ERROR'},
+                {'error': 'Internal server error'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )

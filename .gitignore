@@ -1,0 +1,81 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+*.egg-info/
+*.egg
+.eggs/
+dist/
+build/
+develop-eggs/
+downloads/
+eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.whl
+
+# Django
+*.log
+*.pot
+*.pyc
+db.sqlite3
+coverage/
+.coverage
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+staticfiles/
+media/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.bak
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Data files (your CSV data)
+data/*
+!data/.gitkeep
+
+# Prompts (your assessment files)
+prompts/*
+!prompts/.gitkeep
+
+# Logs
+*.log
+geocoding.log
+
+# Virtual environment
+venv/
+venv*/
+ENV/
+
+# Docker
+*.pid
+.pytest_cache/
+.tox/
+
+# Secrets
+secrets/
+.key
+.pem

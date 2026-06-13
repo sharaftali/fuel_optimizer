@@ -47,6 +47,8 @@ class RoutingService:
             shift = 0
             result = 0
             while True:
+                if index >= length:
+                    return coords
                 b = ord(encoded[index]) - 63
                 index += 1
                 result |= (b & 0x1F) << shift
@@ -60,6 +62,8 @@ class RoutingService:
             shift = 0
             result = 0
             while True:
+                if index >= length:
+                    return coords
                 b = ord(encoded[index]) - 63
                 index += 1
                 result |= (b & 0x1F) << shift

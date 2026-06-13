@@ -1,12 +1,12 @@
+﻿"""
+Unit tests for stations service.
 """
-Unit tests for station route filtering.
-"""
-
+import pytest
 from api.services.stations import StationsService
 
 
 class TestStationsService:
-
+    
     def setup_method(self):
         self.service = StationsService()
         self.service._loaded = True

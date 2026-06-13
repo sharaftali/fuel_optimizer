@@ -88,11 +88,11 @@ class FuelOptimizer:
             cost = gallons_purchased * best['price']
             
             stops.append({
-                'name': best['name'],
-                'address': best['address'],
-                'city': best['city'],
-                'state': best['state'],
-                'price': round(best['price'], 4),
+                'name': best.get('name', ''),
+                'address': best.get('address', ''),
+                'city': best.get('city', ''),
+                'state': best.get('state', ''),
+                'price': round(best.get('price', 0), 4),
                 'gallons': round(gallons_purchased, 2),
                 'cost': round(cost, 2),
                 'miles_from_start': round(best['distance_from_start'], 2),

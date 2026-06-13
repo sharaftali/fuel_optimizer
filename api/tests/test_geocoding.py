@@ -1,14 +1,16 @@
-"""
+﻿"""
 Unit tests for geocoding service.
 """
 import pytest
 from unittest.mock import patch, Mock
+from django.core.cache import cache
 from api.services.geocoding import GeocodingService
 
 
 class TestGeocodingService:
     
     def setup_method(self):
+        cache.clear()
         self.service = GeocodingService()
     
     @patch('api.services.geocoding.requests.get')

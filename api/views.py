@@ -159,11 +159,10 @@ class FuelOptimizeView(APIView):
             
             # Get stations near route
             stations = stations_service.get_stations_near_route(
-                start_lat, start_lng,
-                finish_lat, finish_lng,
+                route['route_points'],
                 buffer_miles=buffer_miles
             )
-            
+
             if not stations:
                 return Response(
                     {'error': 'No fuel stations found near this route'},
